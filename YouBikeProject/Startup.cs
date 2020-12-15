@@ -1,21 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using YouBikeProject.Models;
 
 namespace YouBikeProject
 {
     public class Startup
     {
+        private readonly string hangfirePostgreDBConnection;
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            hangfirePostgreDBConnection = Configuration.GetConnectionString("HangfirePostgreDBString");
         }
 
         public IConfiguration Configuration { get; }
@@ -24,10 +25,20 @@ namespace YouBikeProject
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            services.AddHangfire(configuration => configuration
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(hangfirePostgreDBConnection)
+            );
+
+            services.AddHangfireServer();
+            services.AddHttpClient();
+            services.AddSingleton<IYoubike, Youbike>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IYoubike youbike, IBackgroundJobClient backgroundJob, IRecurringJobManager recurringJob, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -41,6 +52,9 @@ namespace YouBikeProject
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+            app.UseHangfireDashboard();
+            recurringJob.AddOrUpdate("Get Youbike 1hr Log.", () => youbike.GetYoubikeAPI(), Cron.Hourly);
 
             app.UseRouting();
 
