@@ -1,0 +1,38 @@
+﻿@model YouBikeProject.Models.ViewModel.YoubikeLogListViewModel
+@{
+    ViewData["Title"] = "SearchYoubikeLog";
+}
+<style>
+    .row {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+<script>
+    function Search() {
+        $.post("/Youbike/YoubikeLogList", { Sno: $('#Sno').val() }, function (data) {
+            $("#ListResultForm").html(data);
+        });
+    }
+</script>
+
+<h1>YoubikeLogList</h1>
+
+<div class="row">
+    <div class="col-lg-3 col-md-6">
+        @Html.Label("場站名稱")
+    </div>
+    <div class="col-lg-3 col-md-6">
+        @Html.DropDownListFor(m => m.Sno, Model.stationList, "all", new {@class = "form-control"})
+    </div>
+    
+</div>
+<div class="row">
+    <div class="col-12">
+        <button id="Search" onclick="Search()">Search</button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12" id="ListResultForm">
+    </div>
+</div>

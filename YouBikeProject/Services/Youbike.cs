@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Dapper;
+using YouBikeProject.Models.ViewModel;
 
 namespace YouBikeProject.Models
 {
@@ -130,6 +131,36 @@ namespace YouBikeProject.Models
             {
                 _logger.LogError(ex.Message);
             }
+        }
+
+        public List<YouBikeLogModel> GetYouBikeLogList(YoubikeLogListViewModel data)
+        {
+            List<YouBikeLogModel> youBikeLogList = new List<YouBikeLogModel>();
+
+            using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
+            {
+                string sql = @" SELECT logid, sno, sbi, mday, bemp, updatedatetime 
+                                FROM youbikelog";
+
+                string wheresql = string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(data.Sno))
+                {
+                    wheresql = string.Concat(wheresql, "sno = @sno");
+                }
+
+                if (wheresql.Length > 0)
+                {
+                    sql = string.Concat(sql, " WHERE ", wheresql);
+                    youBikeLogList = conn.Query<YouBikeLogModel>(sql, data).ToList();
+                }
+                else
+                {
+                    youBikeLogList = conn.Query<YouBikeLogModel>(sql).ToList();
+                }
+            }
+
+            return youBikeLogList;
         }
 
         public void AddYouBikeLog(YouBikeLogModel data)
