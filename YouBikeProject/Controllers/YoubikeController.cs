@@ -26,6 +26,8 @@ namespace YouBikeProject.Controllers
             model.stationList = _youbike.GetYouBikeStationList()
                 .Select(n => new SelectListItem() { Text = n.SNA, Value = n.SNO }).ToList();
 
+            model.regionList = _youbike.GetRegionList().Select(n => new SelectListItem() { Text = n.AREANAME, Value = n.AREANAME }).ToList();
+
             return View(model);
         }
 

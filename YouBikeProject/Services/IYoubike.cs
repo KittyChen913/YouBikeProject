@@ -13,6 +13,6 @@ namespace YouBikeProject.Models
         public void AddYouBikeStation(YouBikeStationModel data);
         public List<YouBikeLogModel> GetYouBikeLogList(YoubikeLogListViewModel data);
         public void AddYouBikeLog(YouBikeLogModel data);
-
+        public List<RegionModel> GetRegionList();
     }
 }

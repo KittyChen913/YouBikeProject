@@ -139,14 +139,20 @@ namespace YouBikeProject.Models
 
             using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
             {
-                string sql = @" SELECT logid, sno, sbi, mday, bemp, updatedatetime 
-                                FROM youbikelog";
+                string sql = @" SELECT logid, yl.sno, sbi, mday, bemp, updatedatetime 
+                                FROM youbikelog yl
+                                LEFT JOIN youbikestation ys ON yl.sno = ys.sno ";
 
                 string wheresql = string.Empty;
 
                 if (!string.IsNullOrWhiteSpace(data.Sno))
                 {
-                    wheresql = string.Concat(wheresql, "sno = @sno");
+                    wheresql = string.Concat(wheresql, "yl.sno = @sno");
+                }
+                if (!string.IsNullOrWhiteSpace(data.Sarea))
+                {
+                    wheresql = string.Concat(wheresql,
+                        (string.IsNullOrWhiteSpace(wheresql) ? string.Empty : " AND "), "ys.sarea = @Sarea");
                 }
 
                 if (wheresql.Length > 0)
@@ -180,6 +186,28 @@ namespace YouBikeProject.Models
             {
                 _logger.LogError(ex.Message);
             }
+        }
+
+        public List<RegionModel> GetRegionList()
+        {
+            List<RegionModel> regionList = new List<RegionModel>();
+
+            try
+            {
+                using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
+                {
+                    string sql = @" SELECT zipcode, cityname, cityengname, areaname, areaengname
+	                                FROM region;";
+
+                    regionList = conn.Query<RegionModel>(sql).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+
+            return regionList;
         }
     }
 }

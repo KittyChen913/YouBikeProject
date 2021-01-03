@@ -10,7 +10,8 @@
 </style>
 <script>
     function Search() {
-        $.post("/Youbike/YoubikeLogList", { Sno: $('#Sno').val() }, function (data) {
+        var params = { Sno: $('#Sno').val(), Sarea: $('#Sarea').val() };
+        $.post("/Youbike/YoubikeLogList", params, function (data) {
             $("#ListResultForm").html(data);
         });
     }
@@ -25,11 +26,16 @@
     <div class="col-lg-3 col-md-6">
         @Html.DropDownListFor(m => m.Sno, Model.stationList, "all", new {@class = "form-control"})
     </div>
-    
+    <div class="col-lg-3 col-md-6">
+        @Html.Label("場站區域")
+    </div>
+    <div class="col-lg-3 col-md-6">
+        @Html.DropDownListFor(m=> m.Sarea, Model.regionList, "all", new {@class = "form-control"})
+    </div>
 </div>
 <div class="row">
     <div class="col-12">
-        <button id="Search" onclick="Search()">Search</button>
+        <button id="Search" class="btn btn-secondary" onclick="Search()">Search</button>
     </div>
 </div>
 <div class="row">
