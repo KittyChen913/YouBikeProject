@@ -1,4 +1,4 @@
-﻿@model List<YouBikeProject.Models.YouBikeLogModel>
+﻿@model YouBikeProject.Models.ViewModel.YoubikeLogListViewModel
 @*
     For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 *@
@@ -7,27 +7,35 @@
     <thead class="thead-dark">
         <tr>
             <th scope="col">#</th>
-            <th scope="col">LOGID</th>
-            <th scope="col">SNO</th>
-            <th scope="col">SBI</th>
-            <th scope="col">BEMP</th>
-            <th scope="col">MDAY</th>
-            <th scope="col">UPDATEDATETIME</th>
+            <th scope="col">站點代號</th>
+            <th scope="col">場站名稱</th>
+            <th scope="col">場站區域</th>
+            <th scope="col">目前車輛數量</th>
+            <th scope="col">空位數量</th>
+            <th scope="col">官方更新時間</th>
+            <th scope="col">Log 紀錄時間</th>
         </tr>
     </thead>
     <tbody>
-        @for (int i = 0; i < Model.Count; i++)
-        {
-            <tr>
-                <th scope="row">@(i + 1)</th>
-                <td>@Model[i].LOGID</td>
-                <td>@Model[i].SNO</td>
-                <td>@Model[i].SBI</td>
-                <td>@Model[i].BEMP</td>
-                <td>@Model[i].MDAY</td>
-                <td>@Model[i].UPDATEDATETIME</td>
-            </tr>
+        @{
+            int i = 1;
+            foreach (var item in Model.YoubikeLogList)
+            {
+                <tr>
+                    <th scope="row">@i</th>
+                    <td>
+                        @item.SNO
+                        @Html.Hidden("LOGID", @item.LOGID)
+                    </td>
+                    <td>@item.SNA</td>
+                    <td>@item.SAREA</td>
+                    <td>@item.SBI</td>
+                    <td>@item.BEMP</td>
+                    <td>@item.MDAY</td>
+                    <td>@item.UPDATEDATETIME</td>
+                </tr>
+                i++;
+            }
         }
-
     </tbody>
 </table>

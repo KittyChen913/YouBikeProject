@@ -133,37 +133,44 @@ namespace YouBikeProject.Models
             }
         }
 
-        public List<YouBikeLogModel> GetYouBikeLogList(YoubikeLogListViewModel data)
+        public YoubikeLogListViewModel GetYouBikeLogList(YoubikeLogFinderModel data)
         {
-            List<YouBikeLogModel> youBikeLogList = new List<YouBikeLogModel>();
+            YoubikeLogListViewModel youBikeLogList = new YoubikeLogListViewModel();
 
-            using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
+            try
             {
-                string sql = @" SELECT logid, yl.sno, sbi, mday, bemp, updatedatetime 
-                                FROM youbikelog yl
-                                LEFT JOIN youbikestation ys ON yl.sno = ys.sno ";
+                using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
+                {
+                    string sql = @" SELECT logid, yl.sno, sna, sarea, sbi, mday, bemp, updatedatetime 
+                                    FROM youbikelog yl
+                                    LEFT JOIN youbikestation ys ON yl.sno = ys.sno ";
 
-                string wheresql = string.Empty;
+                    string wheresql = string.Empty;
 
-                if (!string.IsNullOrWhiteSpace(data.Sno))
-                {
-                    wheresql = string.Concat(wheresql, "yl.sno = @sno");
-                }
-                if (!string.IsNullOrWhiteSpace(data.Sarea))
-                {
-                    wheresql = string.Concat(wheresql,
-                        (string.IsNullOrWhiteSpace(wheresql) ? string.Empty : " AND "), "ys.sarea = @Sarea");
-                }
+                    if (!string.IsNullOrWhiteSpace(data.Sno))
+                    {
+                        wheresql = string.Concat(wheresql, "yl.sno = @sno");
+                    }
+                    if (!string.IsNullOrWhiteSpace(data.Sarea))
+                    {
+                        wheresql = string.Concat(wheresql,
+                            (string.IsNullOrWhiteSpace(wheresql) ? string.Empty : " AND "), "ys.sarea = @Sarea");
+                    }
 
-                if (wheresql.Length > 0)
-                {
-                    sql = string.Concat(sql, " WHERE ", wheresql);
-                    youBikeLogList = conn.Query<YouBikeLogModel>(sql, data).ToList();
+                    if (wheresql.Length > 0)
+                    {
+                        sql = string.Concat(sql, " WHERE ", wheresql);
+                        youBikeLogList.YoubikeLogList = conn.Query<YouBikeLogViewModel>(sql, data).ToList();
+                    }
+                    else
+                    {
+                        youBikeLogList.YoubikeLogList = conn.Query<YouBikeLogViewModel>(sql).ToList();
+                    }
                 }
-                else
-                {
-                    youBikeLogList = conn.Query<YouBikeLogModel>(sql).ToList();
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
             }
 
             return youBikeLogList;

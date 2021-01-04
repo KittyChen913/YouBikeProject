@@ -11,7 +11,7 @@ namespace YouBikeProject.Models
         public Task GetYoubikeAPI();
         public List<YouBikeStationModel> GetYouBikeStationList();
         public void AddYouBikeStation(YouBikeStationModel data);
-        public List<YouBikeLogModel> GetYouBikeLogList(YoubikeLogListViewModel data);
+        public YoubikeLogListViewModel GetYouBikeLogList(YoubikeLogFinderModel data);
         public void AddYouBikeLog(YouBikeLogModel data);
         public List<RegionModel> GetRegionList();
     }

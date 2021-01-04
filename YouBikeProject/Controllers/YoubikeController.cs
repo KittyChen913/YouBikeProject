@@ -21,8 +21,10 @@ namespace YouBikeProject.Controllers
             _youbike = youbike;
         }
 
-        public IActionResult SearchYoubikeLog(YoubikeLogListViewModel model)
+        public IActionResult SearchYoubikeLog()
         {
+            YoubikeLogFinderModel model = new YoubikeLogFinderModel();
+
             model.stationList = _youbike.GetYouBikeStationList()
                 .Select(n => new SelectListItem() { Text = n.SNA, Value = n.SNO }).ToList();
 
@@ -32,9 +34,9 @@ namespace YouBikeProject.Controllers
         }
 
         [HttpPost]
-        public IActionResult YoubikeLogList(YoubikeLogListViewModel model)
+        public IActionResult YoubikeLogList(YoubikeLogFinderModel model)
         {
-            List<YouBikeLogModel> YouBikeLogListModel = _youbike.GetYouBikeLogList(model);
+            YoubikeLogListViewModel YouBikeLogListModel = _youbike.GetYouBikeLogList(model);
             return PartialView("_YoubikeLogList", YouBikeLogListModel);
         }
     }
