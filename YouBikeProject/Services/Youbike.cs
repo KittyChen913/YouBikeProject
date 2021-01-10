@@ -9,8 +9,9 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Dapper;
 using YouBikeProject.Models.ViewModel;
+using YouBikeProject.Models;
 
-namespace YouBikeProject.Models
+namespace YouBikeProject.Services
 {
     public class Youbike : IYoubike
     {

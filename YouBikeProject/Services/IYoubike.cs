@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using YouBikeProject.Models;
 using YouBikeProject.Models.ViewModel;
 
-namespace YouBikeProject.Models
+namespace YouBikeProject.Services
 {
     public interface IYoubike
     {
