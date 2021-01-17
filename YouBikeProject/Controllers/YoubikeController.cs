@@ -14,9 +14,11 @@ namespace YouBikeProject.Controllers
     {
         private readonly ILogger<YoubikeController> _logger;
         private IYoubike _youbike;
+        private readonly IDBHelpers _dBHelpers;
 
-        public YoubikeController(ILogger<YoubikeController> logger, IYoubike youbike)
+        public YoubikeController(ILogger<YoubikeController> logger, IYoubike youbike, IDBHelpers dBHelpers)
         {
+            this._dBHelpers = dBHelpers;
             _logger = logger;
             _youbike = youbike;
         }
@@ -25,10 +27,10 @@ namespace YouBikeProject.Controllers
         {
             YoubikeLogFinderModel model = new YoubikeLogFinderModel();
 
-            model.stationList = _youbike.GetYouBikeStationList()
+            model.stationList = _dBHelpers.GetYouBikeStationList()
                 .Select(n => new SelectListItem() { Text = n.SNA, Value = n.SNO }).ToList();
 
-            model.regionList = _youbike.GetRegionList().Select(n => new SelectListItem() { Text = n.AREANAME, Value = n.AREANAME }).ToList();
+            model.regionList = _dBHelpers.GetRegionList().Select(n => new SelectListItem() { Text = n.AREANAME, Value = n.AREANAME }).ToList();
 
             return View(model);
         }
@@ -36,7 +38,7 @@ namespace YouBikeProject.Controllers
         [HttpPost]
         public IActionResult YoubikeLogList(YoubikeLogFinderModel model)
         {
-            YoubikeLogListViewModel YouBikeLogListModel = _youbike.GetYouBikeLogList(model);
+            YoubikeLogListViewModel YouBikeLogListModel = _dBHelpers.GetYouBikeLogList(model);
             return PartialView("_YoubikeLogList", YouBikeLogListModel);
         }
     }

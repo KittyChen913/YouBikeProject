@@ -16,35 +16,32 @@ namespace YouBikeProject.Services
     public class Youbike : IYoubike
     {
         private readonly ILogger<Youbike> _logger;
-        private IHttpClientFactory _httpClientFactory;
         public IConfiguration _configuration;
         private readonly string YoubikeRequestUrl;
-        private readonly string YouBikeDBConnectionString;
+        private readonly IHttpClientHelpers _httpClientHelpers;
+        private readonly IDBHelpers _dBHelpers;
 
-        public Youbike(ILogger<Youbike> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public Youbike(ILogger<Youbike> logger, IConfiguration configuration, IHttpClientHelpers httpClientHelpers, IDBHelpers dBHelpers)
         {
+            this._dBHelpers = dBHelpers;
+            this._httpClientHelpers = httpClientHelpers;
             _logger = logger;
-            _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             YoubikeRequestUrl = _configuration.GetValue<string>("RequestAPIUrl:YoubikeAPI");
-            YouBikeDBConnectionString = _configuration.GetConnectionString("YouBikePostgreDBString");
         }
 
         public async Task GetYoubikeAPI()
         {
             try
             {
-                HttpClient client = _httpClientFactory.CreateClient();
-                var response = await client.GetAsync(YoubikeRequestUrl);
+                string responseContent = await _httpClientHelpers.GetAPI(YoubikeRequestUrl);
 
-                if (response.IsSuccessStatusCode)
+                if (!string.IsNullOrWhiteSpace(responseContent))
                 {
-                    string responseContent = await response.Content.ReadAsStringAsync();
-
                     var jObject = JObject.Parse(responseContent);
                     var contentValue = jObject["retVal"].Children().Values();
 
-                    var stationList = GetYouBikeStationList().ToDictionary(n => n.SNO, n => n.SNA);
+                    var stationList = _dBHelpers.GetYouBikeStationList().ToDictionary(n => n.SNO, n => n.SNA);
 
                     foreach (var item in contentValue)
                     {
@@ -53,7 +50,7 @@ namespace YouBikeProject.Services
                         {
                             if (!stationList.ContainsKey(item.Value<string>("sno")))
                             {
-                                AddYouBikeStation(new YouBikeStationModel()
+                                _dBHelpers.AddYouBikeStation(new YouBikeStationModel()
                                 {
                                     SNO = item.Value<string>("sno"),
                                     SNA = item.Value<string>("sna"),
@@ -73,7 +70,7 @@ namespace YouBikeProject.Services
                             if (DateTime.TryParseExact(item.Value<string>("mday"), "yyyyMMddHHmmss", null, System.Globalization.DateTimeStyles.None, out _mday)
                                 && _mday.CompareTo(DateTime.Now.AddHours(-1)) >= 0)
                             {
-                                AddYouBikeLog(new YouBikeLogModel()
+                                _dBHelpers.AddYouBikeLog(new YouBikeLogModel()
                                 {
                                     LOGID = string.Concat(item.Value<string>("sno"), item.Value<string>("mday")),
                                     SNO = item.Value<string>("sno"),
@@ -91,131 +88,6 @@ namespace YouBikeProject.Services
             {
                 _logger.LogError(ex.Message);
             }
-        }
-
-        public List<YouBikeStationModel> GetYouBikeStationList()
-        {
-            List<YouBikeStationModel> youBikeStationsList = new List<YouBikeStationModel>();
-
-            try
-            {
-                using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
-                {
-                    string sql = @" SELECT sno, sna, tot, sarea, lat, lng, ar, sareaen, snaen, aren, act
-                                    FROM youbikestation";
-
-                    youBikeStationsList = conn.Query<YouBikeStationModel>(sql).ToList();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-            }
-
-            return youBikeStationsList;
-        }
-
-        public void AddYouBikeStation(YouBikeStationModel data)
-        {
-            try
-            {
-                using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
-                {
-                    string sql = @" INSERT INTO youbikestation(
-                                        sno, sna, tot, sarea, lat, lng, ar, sareaen, snaen, aren, act)
-	                                VALUES(@sno, @sna, @tot, @sarea, @lat, @lng, @ar, @sareaen, @snaen, @aren, @act);";
-
-                    conn.Execute(sql, data);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-            }
-        }
-
-        public YoubikeLogListViewModel GetYouBikeLogList(YoubikeLogFinderModel data)
-        {
-            YoubikeLogListViewModel youBikeLogList = new YoubikeLogListViewModel();
-
-            try
-            {
-                using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
-                {
-                    string sql = @" SELECT logid, yl.sno, sna, sarea, sbi, mday, bemp, updatedatetime 
-                                    FROM youbikelog yl
-                                    LEFT JOIN youbikestation ys ON yl.sno = ys.sno ";
-
-                    string wheresql = string.Empty;
-
-                    if (!string.IsNullOrWhiteSpace(data.Sno))
-                    {
-                        wheresql = string.Concat(wheresql, "yl.sno = @sno");
-                    }
-                    if (!string.IsNullOrWhiteSpace(data.Sarea))
-                    {
-                        wheresql = string.Concat(wheresql,
-                            (string.IsNullOrWhiteSpace(wheresql) ? string.Empty : " AND "), "ys.sarea = @Sarea");
-                    }
-
-                    if (wheresql.Length > 0)
-                    {
-                        sql = string.Concat(sql, " WHERE ", wheresql);
-                        youBikeLogList.YoubikeLogList = conn.Query<YouBikeLogViewModel>(sql, data).ToList();
-                    }
-                    else
-                    {
-                        youBikeLogList.YoubikeLogList = conn.Query<YouBikeLogViewModel>(sql).ToList();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-            }
-
-            return youBikeLogList;
-        }
-
-        public void AddYouBikeLog(YouBikeLogModel data)
-        {
-            try
-            {
-                using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
-                {
-                    string sql = @" INSERT INTO youbikelog(
-	                                    logid, sno, sbi, mday, bemp, updatedatetime)
-	                                VALUES (@logid, @sno, @sbi, @mday, @bemp, @updatedatetime);";
-
-                    conn.Execute(sql, data);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-            }
-        }
-
-        public List<RegionModel> GetRegionList()
-        {
-            List<RegionModel> regionList = new List<RegionModel>();
-
-            try
-            {
-                using (var conn = new NpgsqlConnection(YouBikeDBConnectionString))
-                {
-                    string sql = @" SELECT zipcode, cityname, cityengname, areaname, areaengname
-	                                FROM region;";
-
-                    regionList = conn.Query<RegionModel>(sql).ToList();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-            }
-
-            return regionList;
         }
     }
 }
