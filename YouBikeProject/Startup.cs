@@ -32,7 +32,7 @@ namespace YouBikeProject
                 .UsePostgreSqlStorage(hangfirePostgreDBConnection)
             );
 
-            services.AddHangfireServer();
+            services.AddHangfireServer(options => options.WorkerCount = 1);
             services.AddHttpClient();
             services.AddSingleton<IYoubike, Youbike>();
             services.AddSingleton<IHttpClientHelpers, HttpClientHelpers>();
