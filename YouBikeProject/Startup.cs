@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Builder;
@@ -12,11 +13,13 @@ namespace YouBikeProject
     public class Startup
     {
         private readonly string hangfirePostgreDBConnection;
+        private readonly List<string> corsAllowHosts;
 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
             hangfirePostgreDBConnection = Configuration.GetConnectionString("HangfirePostgreDBString");
+            corsAllowHosts = Configuration.GetSection("Cors:Hosts").Get<List<string>>();
         }
 
         public IConfiguration Configuration { get; }
@@ -37,6 +40,17 @@ namespace YouBikeProject
             services.AddSingleton<IYoubike, Youbike>();
             services.AddSingleton<IHttpClientHelpers, HttpClientHelpers>();
             services.AddSingleton<IDBHelpers, DBHelpers>();
+
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(
+                builder =>
+                {
+                    builder.WithOrigins(corsAllowHosts.ToArray())
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,6 +73,8 @@ namespace YouBikeProject
             recurringJob.AddOrUpdate("Get Youbike 1hr Log.", () => youbike.GetYoubikeAPI(), Cron.Hourly);
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseAuthorization();
 
