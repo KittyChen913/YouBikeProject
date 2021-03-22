@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
+using YouBikeProject.Models;
 using YouBikeProject.Models.ViewModel;
 using YouBikeProject.Services;
 
@@ -40,6 +41,33 @@ namespace YouBikeProject.Controllers
         {
             YoubikeLogListViewModel YouBikeLogListModel = _dBHelpers.GetYouBikeLogList(model);
             return PartialView("_YoubikeLogList", YouBikeLogListModel);
+        }
+
+        [HttpPost]
+        [Route("api/[controller]/[action]")]
+        [Produces("application/json")]
+        public List<RegionModel> GetRegionList()
+        {
+            List<RegionModel> regionList = _dBHelpers.GetRegionList();
+            return regionList;
+        }
+
+        [HttpPost]
+        [Route("api/[controller]/[action]")]
+        [Produces("application/json")]
+        public List<YouBikeStationModel> GetYouBikeStationList()
+        {
+            List<YouBikeStationModel> regionList = _dBHelpers.GetYouBikeStationList();
+            return regionList;
+        }
+
+        [HttpPost]
+        [Route("api/[controller]/[action]")]
+        [Produces("application/json")]
+        public List<YouBikeLogViewModel> GetYoubikeLogList([FromBody]YoubikeLogFinderModel model)
+        {
+            YoubikeLogListViewModel YouBikeLogListModel = _dBHelpers.GetYouBikeLogList(model);
+            return YouBikeLogListModel.YoubikeLogList;
         }
     }
 }
