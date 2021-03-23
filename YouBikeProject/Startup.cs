@@ -70,7 +70,7 @@ namespace YouBikeProject
             app.UseStaticFiles();
 
             app.UseHangfireDashboard();
-            recurringJob.AddOrUpdate("Get Youbike 1hr Log.", () => youbike.GetYoubikeAPI(), Cron.Hourly);
+            recurringJob.AddOrUpdate("6hr Get Youbike Log.", () => youbike.GetYoubikeAPI(), "0 */6 * * *");
 
             app.UseRouting();
 
