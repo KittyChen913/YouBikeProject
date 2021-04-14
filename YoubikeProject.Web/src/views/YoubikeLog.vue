@@ -37,6 +37,7 @@
             ref="table"
             :columns="Tablecolumns"
             :dataSource="YoubikeLogList"
+            :scroll="{ x: 1000, y: 300 }"
             rowKey="logid"
           >
             <a slot="name" slot-scope="text">{{ text }}</a>
@@ -78,6 +79,8 @@ export default Vue.extend({
           title: '站點代號',
           dataIndex: 'sno',
           key: 'sno',
+          width: 100,
+          fixed: 'left',
         },
         {
           title: '場站名稱',
